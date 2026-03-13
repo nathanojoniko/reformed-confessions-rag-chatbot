@@ -72,7 +72,7 @@ Claude 3 Haiku (generation model)
 | Amazon S3 Vectors | Store vector embeddings | ~$0.01/month |
 | Amazon Bedrock Knowledge Base | RAG orchestration, chunking, retrieval | Pay per query |
 | Amazon Titan Text Embeddings V2 | Convert text chunks to vectors | ~$0.001 one-time |
-| Claude 3 Haiku | Generate answers from retrieved context | ~$0.001/query |
+| Amazon Nova Micro | Generate answers from retrieved context | ~$0.0001/query |
 | AWS Lambda | Serverless backend API | Free tier (1M req/month) |
 | Amazon API Gateway | HTTPS endpoint for Lambda | Free tier (1M req/month) |
 | Amazon Cognito | User authentication | Free tier (50K users/month) |

@@ -165,7 +165,7 @@ Resources:
           PROJECT_NAME: !Ref ProjectName
           # Knowledge Base ID added here after KB is created
           KNOWLEDGE_BASE_ID: "REPLACE_AFTER_KB_CREATED"
-          MODEL_ARN: !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/anthropic.claude-haiku-20240307-v1:0"
+          MODEL_ARN: !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.nova-micro-v1:0"
       # Placeholder code — replaced when you deploy src/lambda_handler.py
       Code:
         ZipFile: |
