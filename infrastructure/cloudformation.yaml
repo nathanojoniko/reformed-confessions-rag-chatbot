@@ -1,12 +1,10 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
   Reformed Confessions RAG Chatbot — Full AWS Infrastructure
-  Creates S3 buckets, S3 Vectors, IAM roles, Lambda, API Gateway, and Cognito.
+  Creates S3 buckets, IAM roles, Lambda, API Gateway, and Cognito.
   No hardcoded credentials. All access via IAM roles.
+  Note: S3 Vectors bucket created separately via CLI (not yet supported in CloudFormation)
 
-# ============================================================
-# PARAMETERS — values you supply when deploying this template
-# ============================================================
 Parameters:
 
   ProjectName:
@@ -14,40 +12,12 @@ Parameters:
     Default: reformed-confessions-rag
     Description: Prefix used for all resource names
 
-# ============================================================
-# RESOURCES
-# ============================================================
 Resources:
 
-  # ----------------------------------------------------------
-  # S3 BUCKET — stores your source confession JSON files
-  # ----------------------------------------------------------
   DocumentsBucket:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub "${ProjectName}-documents-${AWS::AccountId}"
-      # Block ALL public access — these are private documents
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      # Encrypt documents at rest
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      Tags:
-        - Key: Project
-          Value: !Ref ProjectName
-
-  # ----------------------------------------------------------
-  # S3 BUCKET — stores vector embeddings (cheap alternative to OpenSearch)
-  # ----------------------------------------------------------
-  VectorsBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub "${ProjectName}-vectors-${AWS::AccountId}"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -61,16 +31,10 @@ Resources:
         - Key: Project
           Value: !Ref ProjectName
 
-  # ----------------------------------------------------------
-  # IAM ROLE — for Bedrock Knowledge Base
-  # Grants Bedrock permission to read from S3 and write vectors
-  # No hardcoded credentials needed
-  # ----------------------------------------------------------
   BedrockKnowledgeBaseRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: !Sub "${ProjectName}-bedrock-kb-role"
-      # Who can assume this role
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -78,13 +42,11 @@ Resources:
             Principal:
               Service: bedrock.amazonaws.com
             Action: sts:AssumeRole
-      # What this role is allowed to do
       Policies:
         - PolicyName: BedrockKnowledgeBasePolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
-              # Read confession documents from S3
               - Effect: Allow
                 Action:
                   - s3:GetObject
@@ -92,27 +54,24 @@ Resources:
                 Resource:
                   - !GetAtt DocumentsBucket.Arn
                   - !Sub "${DocumentsBucket.Arn}/*"
-              # Read and write vectors to S3 Vectors bucket
               - Effect: Allow
                 Action:
-                  - s3:GetObject
-                  - s3:PutObject
-                  - s3:ListBucket
-                  - s3:DeleteObject
+                  - s3vectors:GetIndex
+                  - s3vectors:ListIndexes
+                  - s3vectors:PutVectors
+                  - s3vectors:GetVectors
+                  - s3vectors:DeleteVectors
+                  - s3vectors:QueryVectors
+                  - s3vectors:ListVectors
                 Resource:
-                  - !GetAtt VectorsBucket.Arn
-                  - !Sub "${VectorsBucket.Arn}/*"
-              # Use Titan Embeddings model
+                  - !Sub "arn:aws:s3vectors:${AWS::Region}:${AWS::AccountId}:bucket/reformed-confessions-vectors"
+                  - !Sub "arn:aws:s3vectors:${AWS::Region}:${AWS::AccountId}:bucket/reformed-confessions-vectors/index/confession-index"
               - Effect: Allow
                 Action:
                   - bedrock:InvokeModel
                 Resource:
                   - !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.titan-embed-text-v2:0"
 
-  # ----------------------------------------------------------
-  # IAM ROLE — for Lambda function
-  # Grants Lambda permission to call Bedrock and write logs
-  # ----------------------------------------------------------
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -125,31 +84,24 @@ Resources:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
-        # Basic Lambda logging to CloudWatch
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: LambdaBedrockPolicy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
-              # Call Bedrock retrieve_and_generate API
               - Effect: Allow
                 Action:
                   - bedrock:RetrieveAndGenerate
                   - bedrock:Retrieve
                   - bedrock:InvokeModel
                 Resource: "*"
-              # Read from S3 documents bucket
               - Effect: Allow
                 Action:
                   - s3:GetObject
                 Resource:
                   - !Sub "${DocumentsBucket.Arn}/*"
 
-  # ----------------------------------------------------------
-  # LAMBDA FUNCTION — the chatbot backend
-  # Receives a question, calls Bedrock, returns cited answer
-  # ----------------------------------------------------------
   ChatbotLambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -159,14 +111,11 @@ Resources:
       Role: !GetAtt LambdaExecutionRole.Arn
       Timeout: 30
       MemorySize: 256
-      # Environment variables — NO secrets here, just config
       Environment:
         Variables:
           PROJECT_NAME: !Ref ProjectName
-          # Knowledge Base ID added here after KB is created
           KNOWLEDGE_BASE_ID: "REPLACE_AFTER_KB_CREATED"
           MODEL_ARN: !Sub "arn:aws:bedrock:${AWS::Region}::foundation-model/amazon.nova-micro-v1:0"
-      # Placeholder code — replaced when you deploy src/lambda_handler.py
       Code:
         ZipFile: |
           import json
@@ -176,9 +125,6 @@ Resources:
                   'body': json.dumps({'message': 'Lambda deployed successfully. Update with real code.'})
               }
 
-  # ----------------------------------------------------------
-  # API GATEWAY — HTTPS endpoint that triggers Lambda
-  # ----------------------------------------------------------
   ChatbotApi:
     Type: AWS::ApiGateway::RestApi
     Properties:
@@ -206,7 +152,6 @@ Resources:
           - "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations"
           - LambdaArn: !GetAtt ChatbotLambda.Arn
 
-  # Permission for API Gateway to invoke Lambda
   ApiGatewayLambdaPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -222,20 +167,14 @@ Resources:
       RestApiId: !Ref ChatbotApi
       StageName: prod
 
-  # ----------------------------------------------------------
-  # COGNITO USER POOL — authentication for invited users only
-  # ----------------------------------------------------------
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
       UserPoolName: !Sub "${ProjectName}-users"
-      # Require email for sign-in
       UsernameAttributes:
         - email
-      # Admin creates accounts — no self sign-up
       AdminCreateUserConfig:
         AllowAdminCreateUserOnly: true
-      # Password policy
       Policies:
         PasswordPolicy:
           MinimumLength: 8
@@ -254,29 +193,16 @@ Resources:
         - ALLOW_USER_PASSWORD_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
 
-  # NOTE: Budget alarm is configured manually in the AWS Console
-  # AWS Budgets does not support SSM dynamic references in CloudFormation
-  # See README.md for manual setup instructions
-
-# ============================================================
-# OUTPUTS — values printed after deployment
-# ============================================================
 Outputs:
 
   DocumentsBucketName:
-    Description: S3 bucket name for confession documents — upload your JSON files here
+    Description: S3 bucket name for confession documents
     Value: !Ref DocumentsBucket
     Export:
       Name: !Sub "${ProjectName}-documents-bucket"
 
-  VectorsBucketName:
-    Description: S3 bucket name for vector embeddings
-    Value: !Ref VectorsBucket
-    Export:
-      Name: !Sub "${ProjectName}-vectors-bucket"
-
   BedrockKnowledgeBaseRoleArn:
-    Description: IAM Role ARN for Bedrock Knowledge Base — use this when creating the KB
+    Description: IAM Role ARN for Bedrock Knowledge Base
     Value: !GetAtt BedrockKnowledgeBaseRole.Arn
     Export:
       Name: !Sub "${ProjectName}-kb-role-arn"
@@ -288,13 +214,13 @@ Outputs:
       Name: !Sub "${ProjectName}-api-endpoint"
 
   UserPoolId:
-    Description: Cognito User Pool ID — use this to create user accounts
+    Description: Cognito User Pool ID
     Value: !Ref UserPool
     Export:
       Name: !Sub "${ProjectName}-user-pool-id"
 
   UserPoolClientId:
-    Description: Cognito App Client ID — used in Streamlit auth
+    Description: Cognito App Client ID
     Value: !Ref UserPoolClient
     Export:
       Name: !Sub "${ProjectName}-user-pool-client-id"
