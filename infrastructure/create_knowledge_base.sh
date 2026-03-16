@@ -34,7 +34,7 @@ KB_ID=$(aws bedrock-agent create-knowledge-base \
   --storage-configuration "{
     \"type\": \"S3_VECTORS\",
     \"s3VectorsConfiguration\": {
-      \"bucketArn\": \"arn:aws:s3:::${VECTORS_BUCKET}\"
+      \"vectorBucketArn\": \"arn:aws:s3:::${VECTORS_BUCKET}\"
     }
   }" \
   --region $REGION \
