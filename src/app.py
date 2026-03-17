@@ -115,9 +115,13 @@ with st.sidebar:
         "What can be inferred about Christian nationalism?",
     ]
 
-    for q in sample_questions:
-        if st.button(q, key=q, use_container_width=True):
-            st.session_state.selected_question = q
+    selected = st.selectbox(
+        "Choose a sample question:",
+        [""] + sample_questions,
+        key="sample_selectbox"
+    )
+    if selected:
+        st.session_state.selected_question = selected
 
     st.markdown("---")
     st.markdown("### 💰 Cost Transparency")
@@ -125,9 +129,9 @@ with st.sidebar:
     Each question costs approximately:
     - **~1,500 tokens** retrieved from the confessions
     - **~300 tokens** to generate the answer
-    - **~$0.0001** per question (Amazon Nova Micro)
+    - **~0.0001 USD** per question (Amazon Nova Micro)
     
-    This entire app costs less than **$1/month** to run.
+    This entire app costs less than **1 USD per month** to run.
     
     Built to demonstrate low-cost AI on AWS. ☁️
     """)
@@ -140,6 +144,7 @@ with st.sidebar:
     - 🗄️ Amazon S3 Vectors
     - ⚡ AWS Lambda
     - 🐍 Python + Streamlit
+    - 🤝 Built with [Claude](https://claude.ai) by Anthropic            
     """)
 
 # ============================================================
@@ -269,7 +274,7 @@ if question:
             })
 
 # ============================================================
-# FOOTER
+# CLEAR CHAT BUTTON
 # ============================================================
 
 if st.session_state.messages:
@@ -277,9 +282,13 @@ if st.session_state.messages:
         st.session_state.messages = []
         st.rerun()
 
+# ============================================================
+# COST NOTE
+# ============================================================
+
 st.markdown("---")
-st.info(
-    "💡 Each question retrieves ~1,500 tokens from the confessions and "
-    "costs approximately $0.0001 to answer using Amazon Nova Micro on AWS Bedrock. "
-    "This entire app runs for less than $1/month."
+st.caption(
+    "💡 Cost transparency: Each question costs approximately 0.0001 USD "
+    "to answer using Amazon Nova Micro on AWS Bedrock. "
+    "This entire app runs for less than 1 USD per month."
 )
