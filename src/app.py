@@ -70,29 +70,6 @@ st.markdown("""
         font-size: 0.8rem;
         margin-top: 0.5rem;
     }
-    button[kind="secondary"] {
-        background-color: #f8f4f0 !important;
-        border: 1px solid #8B4513 !important;
-        color: #3d1f00 !important;
-        text-align: left !important;
-        white-space: normal !important;
-        height: auto !important;
-        padding: 0.5rem 0.75rem !important;
-        font-size: 0.85rem !important;
-        line-height: 1.4 !important;
-        border-radius: 6px !important;
-        margin-bottom: 0.3rem !important;
-    }
-    button[kind="secondary"]:hover {
-        background-color: #8B4513 !important;
-        color: white !important;
-        border-color: #8B4513 !important;
-    }
-    button[kind="secondary"]:focus {
-        box-shadow: none !important;
-        outline: none !important;
-        border-color: #8B4513 !important;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -127,28 +104,6 @@ with st.sidebar:
     """)
 
     st.markdown("---")
-    st.markdown("### Sample Questions")
-    st.caption("Tap a question to load it into the chat")
-
-    sample_questions = [
-        "What do the confessions teach about justification?",
-        "What do the confessions teach about Scripture?",
-        "What do the confessions teach about prayer?",
-        "What do the confessions teach about the Sabbath?",
-        "What can be inferred about gender from the confessions?",
-        "What can be inferred about Christian nationalism?",
-    ]
-
-    for q in sample_questions:
-        if st.button(
-            q,
-            key=f"btn_{q}",
-            use_container_width=True,
-        ):
-            st.session_state.selected_question = q
-            st.rerun()
-
-    st.markdown("---")
     st.markdown("### Built With")
     st.markdown("""
     - 🤖 Amazon Bedrock
@@ -165,9 +120,6 @@ with st.sidebar:
 
 if 'messages' not in st.session_state:
     st.session_state.messages = []
-
-if 'selected_question' not in st.session_state:
-    st.session_state.selected_question = ""
 
 # ============================================================
 # DISPLAY CHAT HISTORY
@@ -222,16 +174,9 @@ for message in st.session_state.messages:
 # CHAT INPUT
 # ============================================================
 
-default_input = st.session_state.selected_question
-if default_input:
-    st.session_state.selected_question = ""
-
 question = st.chat_input(
     "Ask what the confessions teach...",
 )
-
-if default_input and not question:
-    question = default_input
 
 # ============================================================
 # PROCESS QUESTION
