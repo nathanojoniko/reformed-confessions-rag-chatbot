@@ -120,6 +120,19 @@ with st.sidebar:
             st.session_state.selected_question = q
 
     st.markdown("---")
+    st.markdown("### 💰 Cost Transparency")
+    st.markdown("""
+    Each question costs approximately:
+    - **~1,500 tokens** retrieved from the confessions
+    - **~300 tokens** to generate the answer
+    - **~$0.0001** per question (Amazon Nova Micro)
+    
+    This entire app costs less than **$1/month** to run.
+    
+    Built to demonstrate low-cost AI on AWS. ☁️
+    """)
+
+    st.markdown("---")
     st.markdown("### Built With")
     st.markdown("""
     - 🤖 Amazon Bedrock
@@ -131,7 +144,6 @@ with st.sidebar:
 
 # ============================================================
 # CHAT HISTORY
-# Initialize session state for conversation history
 # ============================================================
 
 if 'messages' not in st.session_state:
@@ -193,7 +205,6 @@ for message in st.session_state.messages:
 # CHAT INPUT
 # ============================================================
 
-# Pre-fill input if a sample question was clicked
 default_input = st.session_state.selected_question
 if default_input:
     st.session_state.selected_question = ""
@@ -202,7 +213,6 @@ question = st.chat_input(
     "Ask what the confessions teach...",
 )
 
-# Handle sample question clicks
 if default_input and not question:
     question = default_input
 
@@ -211,17 +221,14 @@ if default_input and not question:
 # ============================================================
 
 if question:
-    # Add user message to chat history
     st.session_state.messages.append({
         "role": "user",
         "content": question
     })
 
-    # Display user message
     with st.chat_message("user"):
         st.markdown(question)
 
-    # Generate and display response
     with st.chat_message("assistant"):
         with st.spinner("Searching the confessions..."):
             result = ask_confessions(question)
@@ -246,7 +253,6 @@ if question:
                             unsafe_allow_html=True
                         )
 
-            # Add assistant message to chat history
             st.session_state.messages.append({
                 "role": "assistant",
                 "content": result['answer'],
@@ -263,10 +269,17 @@ if question:
             })
 
 # ============================================================
-# CLEAR CHAT BUTTON
+# FOOTER
 # ============================================================
 
 if st.session_state.messages:
     if st.button("🗑️ Clear conversation", use_container_width=False):
         st.session_state.messages = []
         st.rerun()
+
+st.markdown("---")
+st.info(
+    "💡 Each question retrieves ~1,500 tokens from the confessions and "
+    "costs approximately $0.0001 to answer using Amazon Nova Micro on AWS Bedrock. "
+    "This entire app runs for less than $1/month."
+)
