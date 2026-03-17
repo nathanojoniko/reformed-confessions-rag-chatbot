@@ -31,7 +31,7 @@ Cite every claim with the specific confession, chapter and section.
 Example citation format: (WCF Chapter 3, Section 2) or (LBC Chapter 1, Section 1)
 If both confessions address the topic, compare what each teaches.
 
-2. NOT EXPLICITLY ADDRESSED (only include this section if needed)
+2. NOT EXPLICITLY ADDRESSED (only including this section if needed)
 If the topic is not directly addressed in either confession, clearly state:
 "This topic is not explicitly addressed in the Westminster Confession \
 of Faith or the London Baptist Confession of 1689."
