@@ -70,6 +70,21 @@ st.markdown("""
         font-size: 0.8rem;
         margin-top: 0.5rem;
     }
+    [data-baseweb="select"] {
+        white-space: normal !important;
+    }
+    [data-baseweb="select"] span {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: unset !important;
+    }
+    [role="option"] {
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        height: auto !important;
+        min-height: 2rem !important;
+        padding: 0.5rem !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -116,25 +131,12 @@ with st.sidebar:
     ]
 
     selected = st.selectbox(
-        "Choose a sample question:",
-        [""] + sample_questions,
+        "Tap a question to load it:",
+        ["👇 Choose a sample question..."] + sample_questions,
         key="sample_selectbox"
     )
-    if selected:
+    if selected and selected != "👇 Choose a sample question...":
         st.session_state.selected_question = selected
-
-    st.markdown("---")
-    st.markdown("### 💰 Cost Transparency")
-    st.markdown("""
-    Each question costs approximately:
-    - **~1,500 tokens** retrieved from the confessions
-    - **~300 tokens** to generate the answer
-    - **~0.0001 USD** per question (Amazon Nova Micro)
-    
-    This entire app costs less than **1 USD per month** to run.
-    
-    Built to demonstrate low-cost AI on AWS. ☁️
-    """)
 
     st.markdown("---")
     st.markdown("### Built With")
@@ -144,7 +146,7 @@ with st.sidebar:
     - 🗄️ Amazon S3 Vectors
     - ⚡ AWS Lambda
     - 🐍 Python + Streamlit
-    - 🤝 Built with [Claude](https://claude.ai) by Anthropic            
+    - 🤝 Built with [Claude](https://claude.ai) by Anthropic
     """)
 
 # ============================================================
@@ -288,7 +290,6 @@ if st.session_state.messages:
 
 st.markdown("---")
 st.caption(
-    "💡 Cost transparency: Each question costs approximately 0.0001 USD "
-    "to answer using Amazon Nova Micro on AWS Bedrock. "
-    "This entire app runs for less than 1 USD per month."
+    "💡 Powered by Amazon Nova Micro on AWS Bedrock — "
+    "each question costs a fraction of a cent to answer."
 )
