@@ -70,20 +70,28 @@ st.markdown("""
         font-size: 0.8rem;
         margin-top: 0.5rem;
     }
-    [data-baseweb="select"] {
+    button[kind="secondary"] {
+        background-color: #f8f4f0 !important;
+        border: 1px solid #8B4513 !important;
+        color: #3d1f00 !important;
+        text-align: left !important;
         white-space: normal !important;
-    }
-    [data-baseweb="select"] span {
-        white-space: normal !important;
-        overflow: visible !important;
-        text-overflow: unset !important;
-    }
-    [role="option"] {
-        white-space: normal !important;
-        word-wrap: break-word !important;
         height: auto !important;
-        min-height: 2rem !important;
-        padding: 0.5rem !important;
+        padding: 0.5rem 0.75rem !important;
+        font-size: 0.85rem !important;
+        line-height: 1.4 !important;
+        border-radius: 6px !important;
+        margin-bottom: 0.3rem !important;
+    }
+    button[kind="secondary"]:hover {
+        background-color: #8B4513 !important;
+        color: white !important;
+        border-color: #8B4513 !important;
+    }
+    button[kind="secondary"]:focus {
+        box-shadow: none !important;
+        outline: none !important;
+        border-color: #8B4513 !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -120,6 +128,7 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("### Sample Questions")
+    st.caption("Tap a question to load it into the chat")
 
     sample_questions = [
         "What do the confessions teach about justification?",
@@ -130,13 +139,14 @@ with st.sidebar:
         "What can be inferred about Christian nationalism?",
     ]
 
-    selected = st.selectbox(
-        "Tap a question to load it:",
-        ["👇 Choose a sample question..."] + sample_questions,
-        key="sample_selectbox"
-    )
-    if selected and selected != "👇 Choose a sample question...":
-        st.session_state.selected_question = selected
+    for q in sample_questions:
+        if st.button(
+            q,
+            key=f"btn_{q}",
+            use_container_width=True,
+        ):
+            st.session_state.selected_question = q
+            st.rerun()
 
     st.markdown("---")
     st.markdown("### Built With")
@@ -290,6 +300,6 @@ if st.session_state.messages:
 
 st.markdown("---")
 st.caption(
-    "💡 Powered by Amazon Nova Micro on AWS Bedrock — "
-    "each question costs a fraction of a cent to answer."
+    "💡 Free to use. Each question costs the host a fraction "
+    "of a cent to run on Amazon Nova Micro via AWS Bedrock."
 )
