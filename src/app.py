@@ -109,7 +109,6 @@ with st.sidebar:
     - 🤖 Amazon Bedrock
     - 📚 Amazon Bedrock Knowledge Base
     - 🗄️ Amazon S3 Vectors
-    - ⚡ AWS Lambda
     - 🐍 Python + Streamlit
     - 🤝 Built with [Claude](https://claude.ai) by Anthropic
     """)
